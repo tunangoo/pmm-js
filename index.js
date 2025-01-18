@@ -48,11 +48,14 @@ async function readSheet() {
     }
 }
 
-// API endpoint để lấy dữ liệu theo số phiếu
+// API endpoint để lấy dữ liệu theo số phiếu hoặc tên người mua
 app.get('/api/search', (req, res) => {
-    const searchNumbers = req.query.numbers.split(' ').map(num => num.trim());
+    const query = req.query.query.split(' ').map(term => term.trim());
     const results = cachedData.filter(row => 
-        searchNumbers.includes(row[0]?.trim())
+        query.some(term => 
+            row[0]?.trim().includes(term) || // Tìm theo số phiếu
+            row[1]?.trim().toLowerCase().includes(term.toLowerCase()) // Tìm theo tên người mua
+        )
     );
     res.json(results);
 });
