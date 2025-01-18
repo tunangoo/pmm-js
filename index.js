@@ -50,18 +50,32 @@ async function readSheet() {
 
 // API endpoint để lấy dữ liệu theo số phiếu hoặc tên người mua
 app.get('/api/search', (req, res) => {
-    const query = req.query.query.split(' ').map(term => term.trim());
-    const results = cachedData.filter(row => 
-        query.some(term => 
-            row[0]?.trim().includes(term) || // Tìm theo số phiếu
-            row[1]?.trim().toLowerCase().includes(term.toLowerCase()) // Tìm theo tên người mua
-        )
-    );
+    const query = req.query.query.trim();
+    const MAX_RESULTS = 50; // Giới hạn số lượng kết quả
+
+    // Kiểm tra xem query chỉ chứa số và dấu cách
+    const isNumberSearch = /^[\d\s]+$/.test(query);
+
+    let results;
+    if (isNumberSearch) {
+        // Tìm theo số phiếu - tách thành mảng các số
+        const numberQueries = query.split(' ').filter(q => q.length > 0);
+        results = cachedData.filter(row => 
+            numberQueries.some(num => row[0]?.trim().includes(num))
+        ).slice(0, MAX_RESULTS); // Giới hạn kết quả
+    } else {
+        // Tìm theo tên người - tìm chính xác chuỗi
+        const searchTerm = query.toLowerCase();
+        results = cachedData.filter(row =>
+            row[1]?.trim().toLowerCase().includes(searchTerm)
+        ).slice(0, MAX_RESULTS); // Giới hạn kết quả
+    }
+
     res.json(results);
 });
 
 // Cập nhật dữ liệu mỗi giây
-setInterval(readSheet, 2000);
+setInterval(readSheet, 5000);
 
 // Đọc dữ liệu lần đầu khi khởi động server
 readSheet();
