@@ -53,8 +53,26 @@ app.get('/api/search', (req, res) => {
     const query = req.query.query.trim();
     const MAX_RESULTS = 25;
 
-    // Lấy IP của client
+    // Lấy thông tin client
     const clientIP = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const userAgent = req.headers['user-agent'];
+    
+    // Phân tích user agent
+    const deviceInfo = {
+        isMobile: /Mobile|Android|iPhone|iPad|iPod/i.test(userAgent),
+        browser: 
+            /Chrome/i.test(userAgent) ? 'Chrome' :
+            /Firefox/i.test(userAgent) ? 'Firefox' :
+            /Safari/i.test(userAgent) ? 'Safari' :
+            /Edge/i.test(userAgent) ? 'Edge' :
+            /Opera|OPR/i.test(userAgent) ? 'Opera' : 'Unknown',
+        os: 
+            /Windows/i.test(userAgent) ? 'Windows' :
+            /Mac OS/i.test(userAgent) ? 'MacOS' :
+            /Android/i.test(userAgent) ? 'Android' :
+            /iOS/i.test(userAgent) ? 'iOS' :
+            /Linux/i.test(userAgent) ? 'Linux' : 'Unknown'
+    };
     
     // Lấy thời gian hiện tại
     const timestamp = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
@@ -75,8 +93,17 @@ app.get('/api/search', (req, res) => {
         ).slice(0, MAX_RESULTS);
     }
 
-    // Log thông tin tìm kiếm
-    console.log(`[${timestamp}] IP: ${clientIP} | Search: "${query}" | Type: ${isNumberSearch ? 'Number' : 'Name'} | Results: ${results.length}`);
+    // Log thông tin tìm kiếm chi tiết hơn
+    console.log(
+        `[${timestamp}] ` +
+        `IP: ${clientIP} | ` +
+        `Device: ${deviceInfo.isMobile ? 'Mobile' : 'Desktop'} | ` +
+        `OS: ${deviceInfo.os} | ` +
+        `Browser: ${deviceInfo.browser} | ` +
+        `Search: "${query}" | ` +
+        `Type: ${isNumberSearch ? 'Number' : 'Name'} | ` +
+        `Results: ${results.length}`
+    );
 
     res.json(results);
 });
