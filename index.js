@@ -41,8 +41,8 @@ app.get('/api/search', (req, res) => {
     res.json(results);
 });
 
-// Cập nhật dữ liệu mỗi phút
-setInterval(readSheet, 60000);
+// Cập nhật dữ liệu mỗi giây
+setInterval(readSheet, 2000);
 
 // Đọc dữ liệu lần đầu khi khởi động server
 readSheet();
