@@ -51,7 +51,7 @@ async function readSheet() {
 // API endpoint để lấy dữ liệu theo số phiếu hoặc tên người mua
 app.get('/api/search', (req, res) => {
     const query = req.query.query.trim();
-    const MAX_RESULTS = 50;
+    const MAX_RESULTS = 25;
 
     // Lấy IP của client
     const clientIP = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
