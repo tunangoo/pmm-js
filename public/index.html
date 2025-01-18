@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tra cứu phiếu</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .search-container {
+            margin-bottom: 20px;
+        }
+        input {
+            padding: 8px;
+            width: 300px;
+            font-size: 16px;
+        }
+        button {
+            padding: 8px 16px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tra cứu phiếu</h1>
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Nhập số phiếu (cách nhau bởi dấu cách)">
+        <button onclick="searchTickets()">Tìm kiếm</button>
+    </div>
+    <div id="results">
+        <table>
+            <thead>
+                <tr>
+                    <th>Số phiếu</th>
+                    <th>Người mua</th>
+                    <th>Loại mua</th>
+                    <th>Thanh toán</th>
+                    <th>Ghi chú</th>
+                </tr>
+            </thead>
+            <tbody id="resultsBody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        async function searchTickets() {
+            const searchInput = document.getElementById('searchInput').value;
+            const resultsBody = document.getElementById('resultsBody');
+            
+            try {
+                const response = await fetch(`/api/search?numbers=${encodeURIComponent(searchInput)}`);
+                const data = await response.json();
+                
+                resultsBody.innerHTML = '';
+                data.forEach(row => {
+                    resultsBody.innerHTML += `
+                        <tr>
+                            <td>${row[0] || ''}</td>
+                            <td>${row[1] || ''}</td>
+                            <td>${row[2] || ''}</td>
+                            <td>${row[3] || ''}</td>
+                            <td>${row[4] || ''}</td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                resultsBody.innerHTML = '<tr><td colspan="5">Có lỗi xảy ra khi tìm kiếm</td></tr>';
+            }
+        }
+    </script>
+</body>
+</html> 
