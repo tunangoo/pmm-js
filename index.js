@@ -88,21 +88,29 @@ app.get('/api/search', (req, res) => {
             const ticketNumber = row[0].trim();
             return numberQueries.some(pattern => {
                 if (pattern.includes('*')) {
-                    // Chuyển đổi pattern thành regex
-                    // Thay thế * bằng \d (một chữ số bất kỳ)
                     const regexPattern = pattern.replace(/\*/g, '\\d');
                     const regex = new RegExp(regexPattern);
                     return regex.test(ticketNumber);
                 }
                 return ticketNumber.includes(pattern);
             });
-        }).slice(0, MAX_RESULTS);
+        });
     } else {
         const searchTerm = query.toLowerCase();
         results = cachedData.filter(row =>
             row[1]?.trim().toLowerCase().includes(searchTerm)
-        ).slice(0, MAX_RESULTS);
+        );
     }
+
+    // Sắp xếp kết quả theo số phiếu tăng dần
+    results.sort((a, b) => {
+        const numA = parseInt((a[0] || '').trim()) || 0;
+        const numB = parseInt((b[0] || '').trim()) || 0;
+        return numA - numB;
+    });
+
+    // Giới hạn số lượng kết quả sau khi đã sắp xếp
+    results = results.slice(0, MAX_RESULTS);
 
     // Log thông tin tìm kiếm
     console.log(
