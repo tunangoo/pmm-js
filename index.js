@@ -77,15 +77,26 @@ app.get('/api/search', (req, res) => {
     // Lấy thời gian hiện tại
     const timestamp = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
 
-    // Kiểm tra xem query chỉ chứa số và dấu cách
-    const isNumberSearch = /^[\d\s]+$/.test(query);
+    // Kiểm tra xem query chỉ chứa số, dấu cách và dấu *
+    const isNumberSearch = /^[\d\s*]+$/.test(query);
 
     let results;
     if (isNumberSearch) {
         const numberQueries = query.split(' ').filter(q => q.length > 0);
-        results = cachedData.filter(row => 
-            numberQueries.some(num => row[0]?.trim().includes(num))
-        ).slice(0, MAX_RESULTS);
+        results = cachedData.filter(row => {
+            if (!row[0]) return false;
+            const ticketNumber = row[0].trim();
+            return numberQueries.some(pattern => {
+                if (pattern.includes('*')) {
+                    // Chuyển đổi pattern thành regex
+                    // Thay thế * bằng \d (một chữ số bất kỳ)
+                    const regexPattern = pattern.replace(/\*/g, '\\d');
+                    const regex = new RegExp(regexPattern);
+                    return regex.test(ticketNumber);
+                }
+                return ticketNumber.includes(pattern);
+            });
+        }).slice(0, MAX_RESULTS);
     } else {
         const searchTerm = query.toLowerCase();
         results = cachedData.filter(row =>
@@ -93,7 +104,7 @@ app.get('/api/search', (req, res) => {
         ).slice(0, MAX_RESULTS);
     }
 
-    // Log thông tin tìm kiếm chi tiết hơn
+    // Log thông tin tìm kiếm
     console.log(
         `[${timestamp}] ` +
         `IP: ${clientIP} | ` +
