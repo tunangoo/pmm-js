@@ -127,6 +127,13 @@ app.get('/api/search', (req, res) => {
     res.json(results);
 });
 
+// API endpoint để lấy số phiếu trống
+app.get('/api/empty-tickets', (req, res) => {
+    const actualEmptyTickets = cachedData.filter(row => !row[1]).length;
+    const displayedEmptyTickets = Math.floor((actualEmptyTickets - 20) / 3 * 2);
+    res.json({ count: Math.max(0, displayedEmptyTickets) });
+});
+
 // Cập nhật dữ liệu mỗi giây
 setInterval(readSheet, 5000);
 

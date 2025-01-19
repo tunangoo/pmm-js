@@ -43,7 +43,10 @@
     </style>
 </head>
 <body>
-    <h1>Tra cứu phiếu</h1>
+    <div style="display: flex; align-items: baseline; gap: 15px;">
+        <h1>Tra cứu phiếu</h1>
+        <span id="remainingTickets" style="font-size: 1rem; color: #666;"></span>
+    </div>
     <div class="search-container">
         <input type="text" id="searchInput" placeholder="Nhập số phiếu hoặc tên người mua (cách nhau bởi dấu cách)">
         <button onclick="searchTickets()">Tìm kiếm</button>
@@ -64,6 +67,18 @@
     </div>
 
     <script>
+        // Thêm hàm mới để lấy số phiếu trống
+        async function getEmptyTicketsCount() {
+            try {
+                const response = await fetch('/api/empty-tickets');
+                const data = await response.json();
+                const remainingTickets = document.getElementById('remainingTickets');
+                remainingTickets.textContent = `(Còn ${data.count} phiếu)`;
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
         async function searchTickets() {
             const searchInput = document.getElementById('searchInput').value;
             const resultsBody = document.getElementById('resultsBody');
@@ -77,6 +92,9 @@
                 const response = await fetch(`/api/search?query=${encodeURIComponent(searchInput)}`);
                 const data = await response.json();
                 console.log(data);
+                
+                // Sau khi tìm kiếm xong, cập nhật lại số phiếu trống
+                await getEmptyTicketsCount();
                 
                 // Xóa kết quả cũ
                 resultsBody.innerHTML = '';
@@ -109,6 +127,9 @@
                 resultsBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Có lỗi xảy ra khi tìm kiếm</td></tr>';
             }
         }
+
+        // Gọi hàm lấy số phiếu trống khi trang web được tải
+        document.addEventListener('DOMContentLoaded', getEmptyTicketsCount);
 
         document.getElementById('searchInput').addEventListener('keydown', function(event) {
             if (event.key === 'Enter') {
