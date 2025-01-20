@@ -130,7 +130,8 @@ app.get('/api/search', (req, res) => {
 // API endpoint để lấy số phiếu trống
 app.get('/api/empty-tickets', (req, res) => {
     const actualEmptyTickets = cachedData.filter(row => !row[1]).length;
-    const displayedEmptyTickets = Math.floor((actualEmptyTickets - 20) / 3 * 2);
+    const dynamicCap = 30 + 60 * (actualEmptyTickets / 300);
+    const displayedEmptyTickets = Math.floor(Math.min(Math.max(0, actualEmptyTickets - 20), dynamicCap));
     res.json({ count: Math.max(0, displayedEmptyTickets) });
 });
 
