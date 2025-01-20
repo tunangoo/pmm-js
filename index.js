@@ -96,10 +96,17 @@ app.get('/api/search', (req, res) => {
             });
         });
     } else {
-        const searchTerm = query.toLowerCase();
-        results = cachedData.filter(row =>
-            row[1]?.trim().toLowerCase().includes(searchTerm)
-        );
+        const searchTerm = query.toLowerCase()
+            .split(' ')
+            .filter(word => word.length > 0);  // Tách thành các từ riêng lẻ
+
+        results = cachedData.filter(row => {
+            if (!row[1]) return false;
+            const normalizedName = row[1].toLowerCase();
+            
+            // Kiểm tra xem tất cả các từ tìm kiếm có nằm trong tên hay không
+            return searchTerm.every(word => normalizedName.includes(word));
+        });
     }
 
     // Sắp xếp kết quả theo số phiếu tăng dần
