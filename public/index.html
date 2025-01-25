@@ -15,9 +15,15 @@
         .search-container {
             margin-bottom: 20px;
             display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .button-container {
+            display: flex;
             gap: 10px;
         }
         input {
+            flex: 1;
             padding: 8px;
             width: 600px;
             font-size: 16px;
@@ -40,6 +46,12 @@
         th {
             background-color: #f4f4f4;
         }
+        @media (max-width: 600px) {
+            .button-container {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
     </style>
 </head>
 <body>
@@ -49,8 +61,10 @@
     </div>
     <div class="search-container">
         <input type="text" id="searchInput" placeholder="Nhập số phiếu hoặc tên người mua (cách nhau bởi dấu cách)">
-        <button onclick="searchTickets()">Tìm kiếm</button>
-        <button onclick="showEmptyTickets()">Xem phiếu trống</button>
+        <div class="button-container">
+            <button onclick="searchTickets()">Tìm kiếm</button>
+            <button onclick="showEmptyTickets()">Xem phiếu trống</button>
+        </div>
     </div>
     <div id="results">
         <table>
