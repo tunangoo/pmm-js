@@ -50,6 +50,7 @@
     <div class="search-container">
         <input type="text" id="searchInput" placeholder="Nhập số phiếu hoặc tên người mua (cách nhau bởi dấu cách)">
         <button onclick="searchTickets()">Tìm kiếm</button>
+        <button onclick="showEmptyTickets()">Xem phiếu trống</button>
     </div>
     <div id="results">
         <table>
@@ -67,7 +68,11 @@
     </div>
 
     <script>
-        // Thêm hàm mới để lấy số phiếu trống
+        let currentPage = 0;
+        let isLoading = false;
+        let hasMoreTickets = true;
+        const TICKETS_PER_PAGE = 30;
+
         async function getEmptyTicketsCount() {
             try {
                 const response = await fetch('/api/empty-tickets');
@@ -127,6 +132,73 @@
                 resultsBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Có lỗi xảy ra khi tìm kiếm</td></tr>';
             }
         }
+
+        async function showEmptyTickets(loadMore = false) {
+            const resultsBody = document.getElementById('resultsBody');
+            
+            if (!loadMore) {
+                // Reset các biến khi tải mới
+                currentPage = 0;
+                hasMoreTickets = true;
+                resultsBody.innerHTML = '';
+            }
+
+            if (isLoading || !hasMoreTickets) return;
+            
+            isLoading = true;
+            
+            try {
+                const response = await fetch(`/api/empty-tickets-list?page=${currentPage}&limit=${TICKETS_PER_PAGE}`);
+                const data = await response.json();
+                
+                if (!loadMore) {
+                    resultsBody.innerHTML = '';
+                }
+                
+                if (!data.tickets || data.tickets.length === 0) {
+                    if (!loadMore) {
+                        resultsBody.innerHTML = `
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 20px;">
+                                    Không có phiếu trống
+                                </td>
+                            </tr>`;
+                    }
+                    hasMoreTickets = false;
+                    return;
+                }
+
+                // Hiển thị danh sách phiếu trống
+                data.tickets.forEach(row => {
+                    resultsBody.innerHTML += `
+                        <tr>
+                            <td>${row[0] || ''}</td>
+                            <td></td>
+                            <td>${row[2] || ''}</td>
+                            <td>${row[3] || ''}</td>
+                            <td>${row[4] || ''}</td>
+                        </tr>
+                    `;
+                });
+
+                hasMoreTickets = data.hasMore;
+                currentPage++;
+            } catch (error) {
+                console.error('Error:', error);
+                if (!loadMore) {
+                    resultsBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Có lỗi xảy ra khi tải danh sách</td></tr>';
+                }
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        // Thêm infinite scroll
+        window.addEventListener('scroll', () => {
+            if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 100) {
+                showEmptyTickets(true);
+            }
+        });
 
         // Gọi hàm lấy số phiếu trống khi trang web được tải
         document.addEventListener('DOMContentLoaded', getEmptyTicketsCount);

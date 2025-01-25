@@ -137,9 +137,65 @@ app.get('/api/search', (req, res) => {
 // API endpoint để lấy số phiếu trống
 app.get('/api/empty-tickets', (req, res) => {
     const actualEmptyTickets = cachedData.filter(row => !row[1]).length;
-    const dynamicCap = 30 + 60 * (actualEmptyTickets / 300);
-    const displayedEmptyTickets = Math.floor(Math.min(Math.max(0, actualEmptyTickets - 20), dynamicCap));
-    res.json({ count: Math.max(0, displayedEmptyTickets) });
+    res.json({ count: Math.max(0, actualEmptyTickets - 20) });
+});
+
+// API trả về danh sách phiếu trống có phân trang
+app.get('/api/empty-tickets-list', (req, res) => {
+    const page = parseInt(req.query.page) || 0;
+    const limit = parseInt(req.query.limit) || 30;
+    const start = page * limit;
+
+    // Lấy thông tin client
+    const clientIP = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const userAgent = req.headers['user-agent'];
+    
+    // Phân tích user agent
+    const deviceInfo = {
+        isMobile: /Mobile|Android|iPhone|iPad|iPod/i.test(userAgent),
+        browser: 
+            /Chrome/i.test(userAgent) ? 'Chrome' :
+            /Firefox/i.test(userAgent) ? 'Firefox' :
+            /Safari/i.test(userAgent) ? 'Safari' :
+            /Edge/i.test(userAgent) ? 'Edge' :
+            /Opera|OPR/i.test(userAgent) ? 'Opera' : 'Unknown',
+        os: 
+            /Windows/i.test(userAgent) ? 'Windows' :
+            /Mac OS/i.test(userAgent) ? 'MacOS' :
+            /Android/i.test(userAgent) ? 'Android' :
+            /iOS/i.test(userAgent) ? 'iOS' :
+            /Linux/i.test(userAgent) ? 'Linux' : 'Unknown'
+    };
+
+    
+    const emptyTickets = cachedData.filter(row => !row[1]);
+    // Sắp xếp theo số phiếu
+    emptyTickets.sort((a, b) => {
+        const numA = parseInt((a[0] || '').trim()) || 0;
+        const numB = parseInt((b[0] || '').trim()) || 0;
+        return numA - numB;
+    });
+
+    const paginatedTickets = emptyTickets.slice(start, start + limit);
+    const hasMore = start + limit < emptyTickets.length;
+
+    // Lấy thời gian hiện tại
+    const timestamp = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+
+
+    // log thông tin user xem phiếu trống
+    console.log(`[${timestamp}] ` +
+        `IP: ${clientIP} | ` +
+        `Device: ${deviceInfo.isMobile ? 'Mobile' : 'Desktop'} | ` +
+        `OS: ${deviceInfo.os} | ` +
+        `Browser: ${deviceInfo.browser} | ` +
+        `Viewing empty tickets`
+    );
+
+    res.json({
+        tickets: paginatedTickets,
+        hasMore: hasMore
+    });
 });
 
 // Cập nhật dữ liệu mỗi giây
