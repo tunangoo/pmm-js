@@ -142,6 +142,11 @@ app.get('/api/empty-tickets', (req, res) => {
     res.json({ count: Math.max(0, displayedEmptyTickets) });
 });
 
+// API Get check health
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok' });
+});
+
 // Cập nhật dữ liệu mỗi giây
 setInterval(readSheet, 5000);
 
